@@ -1,0 +1,46 @@
+cmake_minimum_required(VERSION 3.5)
+
+project(yolov5)
+
+set(SOURCES_PATH src)
+set(TARGET_NAME main)
+include_directories(./include)
+
+
+set(CUDA_PATH /usr/local/cuda)
+set(TENSORRT_PATH /usr/lib/x86_64-linux-gnu)
+
+
+find_package(OpenCV)
+include_directories(${OpenCV_INCLUDE_DIRS})
+
+add_library(opencv INTERFACE)
+target_include_directories(opencv INTERFACE ${OpenCV_INCLUDE_DIRS})
+target_link_libraries(opencv INTERFACE ${OpenCV_LIBS})
+
+add_library(cuda INTERFACE)
+target_include_directories(cuda INTERFACE ${CUDA_PATH}/include/)
+link_directories(${CUDA_PATH}/lib64)
+target_link_libraries(cuda INTERFACE 
+        libcudart.so 
+        libcublas.so
+        libcurand.so
+        libcusolver.so
+        libcusparse.so
+    )
+
+add_library(tensorrt INTERFACE)
+target_include_directories(tensorrt INTERFACE ${TENSORRT_PATH}/include)
+link_directories(${TENSORRT_PATH}/lib)
+target_link_libraries(tensorrt INTERFACE 
+        libnvinfer.so 
+        libnvinfer_plugin.so
+        libnvparsers.so 
+        libnvonnxparser.so
+    )
+
+file(GLOB_RECURSE SOURCES_FILES ${SOURCES_PATH}/*.cpp)
+add_executable(main ${SOURCES_FILES})
+target_include_directories(main PUBLIC ${SOURCES_PATH})
+target_link_libraries(main cuda tensorrt opencv)
+
